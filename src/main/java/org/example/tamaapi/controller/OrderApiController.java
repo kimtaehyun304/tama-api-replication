@@ -3,25 +3,28 @@ package org.example.tamaapi.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.tamaapi.auth.CustomPrincipal;
-import org.example.tamaapi.aspect.PreAuthentication;
+import org.example.tamaapi.common.auth.CustomPrincipal;
+import org.example.tamaapi.common.aspect.PreAuthentication;
 import org.example.tamaapi.domain.order.PortOnePaymentStatus;
 import org.example.tamaapi.domain.order.Order;
 import org.example.tamaapi.domain.user.Member;
 import org.example.tamaapi.dto.PortOneOrder;
 import org.example.tamaapi.dto.requestDto.CustomPageRequest;
 import org.example.tamaapi.dto.requestDto.order.*;
+
 import org.example.tamaapi.dto.responseDto.CustomPage;
 import org.example.tamaapi.dto.responseDto.SimpleResponse;
 import org.example.tamaapi.dto.responseDto.member.MemberOrderSetUpResponse;
-import org.example.tamaapi.repository.MemberCouponRepository;
-import org.example.tamaapi.repository.MemberRepository;
-import org.example.tamaapi.repository.order.query.dto.GuestOrderResponse;
-import org.example.tamaapi.repository.order.query.dto.MemberOrderResponse;
-import org.example.tamaapi.exception.MyBadRequestException;
-import org.example.tamaapi.repository.order.OrderRepository;
-import org.example.tamaapi.repository.order.query.dto.AdminOrderResponse;
-import org.example.tamaapi.repository.order.query.OrderQueryRepository;
+
+import org.example.tamaapi.common.exception.MyBadRequestException;
+
+import org.example.tamaapi.query.MemberCouponQueryRepository;
+import org.example.tamaapi.query.MemberQueryRepository;
+import org.example.tamaapi.query.order.OrderQueryRepository;
+import org.example.tamaapi.query.order.dynamicQuery.OrderDynamicQueryRepository;
+import org.example.tamaapi.query.order.dynamicQuery.dto.AdminOrderResponse;
+import org.example.tamaapi.query.order.dynamicQuery.dto.GuestOrderResponse;
+import org.example.tamaapi.query.order.dynamicQuery.dto.MemberOrderResponse;
 import org.example.tamaapi.service.EmailService;
 import org.example.tamaapi.service.OrderService;
 import org.example.tamaapi.service.PortOneService;
@@ -37,7 +40,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Map;
 
-import static org.example.tamaapi.util.ErrorMessageUtil.*;
+import static org.example.tamaapi.common.util.ErrorMessageUtil.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -45,12 +48,13 @@ import static org.example.tamaapi.util.ErrorMessageUtil.*;
 public class OrderApiController {
 
     private final OrderService orderService;
-    private final OrderRepository orderRepository;
-    private final EmailService emailService;
+    private final OrderDynamicQueryRepository orderDynamicQueryRepository;
     private final OrderQueryRepository orderQueryRepository;
+
+    private final MemberQueryRepository memberQueryRepository;
+
+    private final EmailService emailService;
     private final PortOneService portOneService;
-    private final MemberRepository memberRepository;
-    private final MemberCouponRepository memberCouponRepository;
 
     //멤버 주문 조회
     @GetMapping("/api/orders/member")
@@ -58,7 +62,7 @@ public class OrderApiController {
         if (principal == null)
             throw new IllegalArgumentException("액세스 토큰이 비었습니다.");
         //조회라 굳이 멤버 존재 체크 안필요
-        return orderQueryRepository.findMemberOrdersWithPaging(customPageRequest, principal.getMemberId());
+        return orderDynamicQueryRepository.findMemberOrdersWithPaging(customPageRequest, principal.getMemberId());
     }
 
     //비로그인 주문 조회
@@ -79,7 +83,7 @@ public class OrderApiController {
         String buyerName = values[0];
         Long orderId = Long.parseLong(values[1]);
 
-        GuestOrderResponse guestOrderResponse = orderQueryRepository.findGuestOrder(orderId)
+        GuestOrderResponse guestOrderResponse = orderDynamicQueryRepository.findGuestOrder(orderId)
                 .orElseThrow(() -> new IllegalArgumentException(NOT_FOUND_ORDER));
 
         if (!guestOrderResponse.getGuestName().equals(buyerName))
@@ -180,12 +184,12 @@ public class OrderApiController {
             throw new MyBadRequestException("액세스 토큰이 비었습니다.");
 
         //사용자가 주문 취소 사유를 입력하도록 변경 필요
-        if(cancelMemberOrderRequest.isFreeOrder())
+        if(cancelMemberOrderRequest.getIsFreeOrder())
             orderService.cancelMemberFreeOrder(cancelMemberOrderRequest.getOrderId(),principal.getMemberId());
         else
             orderService.cancelMemberOrder(cancelMemberOrderRequest.getOrderId(), principal.getMemberId(), "구매자 취소 요청");
 
-        return ResponseEntity.status(HttpStatus.OK).body(new SimpleResponse("결제 취소 완료"));
+        return ResponseEntity.status(HttpStatus.OK).body(new SimpleResponse("주문 취소 접수 완료"));
     }
 
     //게스트 주문 취소
@@ -206,7 +210,8 @@ public class OrderApiController {
         String buyerName = values[0];
         Long orderId = Long.parseLong(values[1]);
 
-        Order order = orderRepository.findAllWithOrderItemAndDeliveryByOrderId(orderId).orElseThrow(() -> new IllegalArgumentException(NOT_FOUND_ORDER));
+        Order order = orderQueryRepository.findAllWithOrderItemAndDeliveryByOrderId(orderId)
+                .orElseThrow(() -> new IllegalArgumentException(NOT_FOUND_ORDER));
         //사용자 검증
         if (!order.getGuest().getNickname().equals(buyerName))
             throw new IllegalArgumentException(NOT_FOUND_ORDER);
@@ -230,7 +235,7 @@ public class OrderApiController {
     @PreAuthentication
     @PreAuthorize("hasRole('ADMIN')")
     public CustomPage<AdminOrderResponse> orders(@Valid @ModelAttribute CustomPageRequest customPageRequest) {
-        return orderQueryRepository.findAdminOrdersWithPaging(customPageRequest);
+        return orderDynamicQueryRepository.findAdminOrdersWithPaging(customPageRequest);
     }
 
     //포트원 결제 내역에 저장할 멤버 정보
@@ -239,13 +244,9 @@ public class OrderApiController {
         if (principal == null)
             throw new IllegalArgumentException("액세스 토큰이 비었습니다.");
 
-        Member member = memberRepository.findWithAddressesById(principal.getMemberId())
+        Member member = memberQueryRepository.findWithAddressesById(principal.getMemberId())
                 .orElseThrow(() -> new IllegalArgumentException(NOT_FOUND_MEMBER));
         return ResponseEntity.status(HttpStatus.OK).body(new MemberOrderSetUpResponse(member));
     }
-
-
-
-
 
 }

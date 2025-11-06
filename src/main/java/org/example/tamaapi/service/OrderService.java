@@ -16,14 +16,18 @@ import org.example.tamaapi.domain.order.OrderStatus;
 import org.example.tamaapi.dto.PortOneOrder;
 import org.example.tamaapi.dto.requestDto.order.OrderItemRequest;
 
-import org.example.tamaapi.exception.UsedPaymentIdException;
-import org.example.tamaapi.exception.OrderFailException;
-import org.example.tamaapi.exception.WillCancelPaymentException;
-import org.example.tamaapi.repository.JdbcTemplateRepository;
-import org.example.tamaapi.repository.MemberCouponRepository;
-import org.example.tamaapi.repository.MemberRepository;
-import org.example.tamaapi.repository.item.ColorItemSizeStockRepository;
-import org.example.tamaapi.repository.order.OrderRepository;
+import org.example.tamaapi.common.exception.UsedPaymentIdException;
+import org.example.tamaapi.common.exception.OrderFailException;
+import org.example.tamaapi.common.exception.WillCancelPaymentException;
+import org.example.tamaapi.command.JdbcTemplateRepository;
+import org.example.tamaapi.command.MemberCouponRepository;
+import org.example.tamaapi.command.MemberRepository;
+import org.example.tamaapi.command.item.ColorItemSizeStockRepository;
+import org.example.tamaapi.command.order.OrderRepository;
+import org.example.tamaapi.query.MemberCouponQueryRepository;
+import org.example.tamaapi.query.MemberQueryRepository;
+import org.example.tamaapi.query.item.ColorItemSizeStockQueryRepository;
+import org.example.tamaapi.query.order.OrderQueryRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,9 +35,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.*;
 
-import static org.example.tamaapi.util.ErrorMessageUtil.*;
-import static org.example.tamaapi.util.ErrorMessageUtil.NOT_FOUND_COUPON;
-import static org.example.tamaapi.util.ErrorMessageUtil.NOT_FOUND_MEMBER;
+import static org.example.tamaapi.common.util.ErrorMessageUtil.*;
+import static org.example.tamaapi.common.util.ErrorMessageUtil.NOT_FOUND_COUPON;
+import static org.example.tamaapi.common.util.ErrorMessageUtil.NOT_FOUND_MEMBER;
 
 @Service
 @Transactional
@@ -41,14 +45,22 @@ import static org.example.tamaapi.util.ErrorMessageUtil.NOT_FOUND_MEMBER;
 @Slf4j
 public class OrderService {
 
-    private final OrderRepository orderRepository;
+    private final OrderQueryRepository orderQueryRepository;
+    private final ColorItemSizeStockQueryRepository colorItemSizeStockQueryRepository;
+    private final MemberQueryRepository memberQueryRepository;
+    private final MemberCouponQueryRepository memberCouponQueryRepository;
+
+    //변경감지 용도
     private final MemberRepository memberRepository;
-    private final ColorItemSizeStockRepository colorItemSizeStockRepository;
-    private final JdbcTemplateRepository jdbcTemplateRepository;
-    private final PortOneService portOneService;
-    private final ItemService itemService;
     private final MemberCouponRepository memberCouponRepository;
+    private final OrderRepository orderRepository;
+
+    private final ItemService itemService;
+
+    private final JdbcTemplateRepository jdbcTemplateRepository;
     private final EntityManager em;
+
+    private final PortOneService portOneService;
 
     @Value("${portOne.secret}")
     private String PORT_ONE_SECRET;
@@ -68,6 +80,8 @@ public class OrderService {
         try {
             Member member = memberRepository.findById(memberId)
                     .orElseThrow(() -> new OrderFailException(NOT_FOUND_MEMBER));
+            //사용한 포인트 차감
+            member.minusPoint(usedPoint);
 
             MemberCoupon memberCoupon = null;
 
@@ -78,8 +92,6 @@ public class OrderService {
                         .orElseThrow(() -> new OrderFailException(NOT_FOUND_COUPON));
                 memberCoupon.changeIsUsed(true);
             }
-            //사용한 포인트 차감
-            member.minusPoint(usedPoint);
 
             saveOrder(paymentId, member, null, receiverNickname, receiverPhone,
                     zipCode, streetAddress, detailAddress, message, memberCoupon, usedPoint, orderItems);
@@ -113,6 +125,8 @@ public class OrderService {
         try {
             Member member = memberRepository.findById(memberId)
                     .orElseThrow(() -> new OrderFailException(NOT_FOUND_MEMBER));
+            //사용한 포인트 차감
+            member.minusPoint(usedPoint);
 
             MemberCoupon memberCoupon = null;
 
@@ -123,8 +137,6 @@ public class OrderService {
                         .orElseThrow(() -> new OrderFailException(NOT_FOUND_COUPON));
                 memberCoupon.changeIsUsed(true);
             }
-            //사용한 포인트 차감
-            member.minusPoint(usedPoint);
 
             saveOrder(null, member, null, receiverNickname, receiverPhone,
                     zipCode, streetAddress, detailAddress, message, memberCoupon, usedPoint, orderItems);
@@ -192,7 +204,8 @@ public class OrderService {
     }
 
     public void cancelGuestOrder(Long orderId, String reason) {
-        Order order = orderRepository.findById(orderId).orElseThrow(() -> new IllegalArgumentException(NOT_FOUND_ORDER));
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException(NOT_FOUND_ORDER));
         OrderStatus status = order.getStatus();
         //나머지 케이스는 취소 불가
         if (!(status == OrderStatus.ORDER_RECEIVED || status == OrderStatus.DELIVERED)) {
@@ -208,7 +221,7 @@ public class OrderService {
     public void cancelMemberOrder(Long orderId, Long memberId, String reason) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException(NOT_FOUND_ORDER));
-        Member member = memberRepository.findById(memberId)
+        Member member = memberQueryRepository.findById(memberId)
                 .orElseThrow(() -> new IllegalArgumentException(NOT_FOUND_MEMBER));
 
         if (!member.getAuthority().equals(Authority.ADMIN) && !order.getMember().getId().equals(memberId)) {
@@ -226,13 +239,13 @@ public class OrderService {
         }
 
         order.cancelOrder();
-        portOneService.cancelPayment(order.getPaymentId(), reason);
+        //portOneService.cancelPayment(order.getPaymentId(), reason);
     }
 
     public void cancelMemberFreeOrder(Long orderId, Long memberId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException(NOT_FOUND_ORDER));
-        Member member = memberRepository.findById(memberId)
+        Member member = memberQueryRepository.findById(memberId)
                 .orElseThrow(() -> new IllegalArgumentException(NOT_FOUND_MEMBER));
 
         if (!member.getAuthority().equals(Authority.ADMIN) && !order.getMember().getId().equals(memberId)) {
@@ -260,7 +273,7 @@ public class OrderService {
         for (OrderItemRequest orderItemRequest : orderItemRequests) {
             Long colorItemSizeStockId = orderItemRequest.getColorItemSizeStockId();
             //영속성 컨텍스트 재사용
-            ColorItemSizeStock colorItemSizeStock = colorItemSizeStockRepository.findById(colorItemSizeStockId)
+            ColorItemSizeStock colorItemSizeStock = colorItemSizeStockQueryRepository.findById(colorItemSizeStockId)
                     .orElseThrow(() -> new IllegalArgumentException(colorItemSizeStockId + "는 동록되지 않은 상품입니다"));
 
             //가격 변동 or 할인 쿠폰 고려
@@ -278,7 +291,8 @@ public class OrderService {
 
     public int getOrderItemsPrice(List<OrderItemRequest> orderItems) {
         List<Long> colorItemSizeStockIds = orderItems.stream().map(OrderItemRequest::getColorItemSizeStockId).toList();
-        List<ColorItemSizeStock> colorItemSizeStocks = colorItemSizeStockRepository.findAllWithColorItemAndItemByIdIn(colorItemSizeStockIds);
+        List<ColorItemSizeStock> colorItemSizeStocks = colorItemSizeStockQueryRepository
+                .findAllWithColorItemAndItemByIdIn(colorItemSizeStockIds);
 
         Map<Long, Integer> idPriceMap = new HashMap<>();
         for (ColorItemSizeStock colorItemSizeStock : colorItemSizeStocks) {
@@ -348,7 +362,7 @@ public class OrderService {
         MemberCoupon memberCoupon = null;
 
         if (memberCouponId != null) {
-            memberCoupon = memberCouponRepository.findWithById(memberCouponId)
+            memberCoupon = memberCouponQueryRepository.findWithById(memberCouponId)
                     .orElseThrow(() -> new IllegalArgumentException(NOT_FOUND_COUPON));
             validateCoupon(memberCoupon, orderItemsPrice);
         }
@@ -372,7 +386,7 @@ public class OrderService {
         MemberCoupon memberCoupon = null;
 
         if (memberCouponId != null) {
-            memberCoupon = memberCouponRepository.findWithById(memberCouponId)
+            memberCoupon = memberCouponQueryRepository.findWithById(memberCouponId)
                     .orElseThrow(() -> new IllegalArgumentException(NOT_FOUND_COUPON));
             validateCoupon(memberCoupon, orderItemsPrice);
         }
@@ -407,7 +421,7 @@ public class OrderService {
     private void validatePoint(int usedPoint, Long memberId, int orderPriceUsedCoupon, int SHIPPING_FEE) {
         String cancelMsg = null;
 
-        Member member = memberRepository.findById(memberId)
+        Member member = memberQueryRepository.findById(memberId)
                 .orElseThrow(() -> new OrderFailException(NOT_FOUND_MEMBER));
 
         int serverPoint = member.getPoint();
@@ -422,7 +436,7 @@ public class OrderService {
     }
 
     private void validatePaymentId(String paymentId) {
-        orderRepository.findByPaymentId(paymentId)
+        orderQueryRepository.findByPaymentId(paymentId)
                 .ifPresent(order -> {
                     throw new UsedPaymentIdException();
                 });

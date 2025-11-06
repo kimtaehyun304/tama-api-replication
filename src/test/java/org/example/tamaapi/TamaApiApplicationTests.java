@@ -1,48 +1,21 @@
 package org.example.tamaapi;
 
-import com.querydsl.core.types.Order;
-import com.querydsl.core.types.OrderSpecifier;
-import com.querydsl.core.types.dsl.BooleanExpression;
-import com.querydsl.core.types.dsl.Expressions;
-import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import jakarta.persistence.EntityManager;
-import jakarta.persistence.Query;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.tamaapi.domain.Gender;
-import org.example.tamaapi.domain.item.ColorItemSizeStock;
-import org.example.tamaapi.dto.requestDto.CustomPageRequest;
-import org.example.tamaapi.dto.requestDto.CustomSort;
-import org.example.tamaapi.exception.MyBadRequestException;
-import org.example.tamaapi.exception.NotEnoughStockException;
-import org.example.tamaapi.repository.item.ColorItemImageRepository;
-import org.example.tamaapi.repository.item.ColorItemSizeStockRepository;
-import org.example.tamaapi.repository.item.query.dto.CategoryBestItemQueryResponse;
-import org.example.tamaapi.repository.item.query.dto.QCategoryItemQueryDto;
+import org.example.tamaapi.common.exception.NotEnoughStockException;
+import org.example.tamaapi.command.item.ColorItemSizeStockRepository;
 import org.example.tamaapi.service.EmailService;
 import org.example.tamaapi.service.ItemService;
-import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.domain.Sort;
-import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.CollectionUtils;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import static org.apache.commons.lang3.BooleanUtils.isTrue;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.example.tamaapi.domain.item.QCategory.category;
-import static org.example.tamaapi.domain.item.QColor.color;
-import static org.example.tamaapi.domain.item.QColorItem.colorItem;
-import static org.example.tamaapi.domain.item.QColorItemSizeStock.colorItemSizeStock;
-import static org.example.tamaapi.domain.item.QItem.item;
 import static org.springframework.util.CollectionUtils.isEmpty;
 import static org.springframework.util.StringUtils.hasText;
 

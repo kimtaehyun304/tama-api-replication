@@ -2,8 +2,8 @@ package org.example.tamaapi.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.example.tamaapi.cache.MyCacheType;
-import org.example.tamaapi.auth.CustomPrincipal;
+import org.example.tamaapi.common.cache.MyCacheType;
+import org.example.tamaapi.common.auth.CustomPrincipal;
 import org.example.tamaapi.domain.user.Authority;
 import org.example.tamaapi.dto.requestDto.member.EmailRequest;
 import org.example.tamaapi.dto.requestDto.member.MyTokenRequest;
@@ -11,11 +11,12 @@ import org.example.tamaapi.dto.responseDto.AccessTokenResponse;
 import org.example.tamaapi.dto.responseDto.IsAdminResponse;
 import org.example.tamaapi.dto.responseDto.SimpleResponse;
 
-import org.example.tamaapi.repository.MemberRepository;
+import org.example.tamaapi.command.MemberRepository;
+import org.example.tamaapi.query.MemberQueryRepository;
 import org.example.tamaapi.service.CacheService;
 import org.example.tamaapi.service.EmailService;
-import org.example.tamaapi.util.ErrorMessageUtil;
-import org.example.tamaapi.util.RandomStringGenerator;
+import org.example.tamaapi.common.util.ErrorMessageUtil;
+import org.example.tamaapi.common.util.RandomStringGenerator;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -26,7 +27,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class AuthenticationApiController {
 
-    private final MemberRepository memberRepository;
+    private final MemberQueryRepository memberQueryRepository;
     private final CacheService cacheService;
     private final EmailService emailService;
 
@@ -42,7 +43,7 @@ public class AuthenticationApiController {
 
     @PostMapping("/api/auth/email")
     public ResponseEntity<SimpleResponse> email(@Valid @RequestBody EmailRequest emailRequest) {
-        memberRepository.findByEmail(emailRequest.getEmail()).ifPresent(m -> {
+        memberQueryRepository.findByEmail(emailRequest.getEmail()).ifPresent(m -> {
             throw new IllegalArgumentException("이미 가입된 이메일입니다");
         });
 
@@ -54,7 +55,7 @@ public class AuthenticationApiController {
 
     @GetMapping("/api/isAdmin")
     public ResponseEntity<IsAdminResponse> isAdmin(@AuthenticationPrincipal CustomPrincipal principal) {
-        Authority authority = memberRepository.findAuthorityById(principal.getMemberId())
+        Authority authority = memberQueryRepository.findAuthorityById(principal.getMemberId())
                 .orElseThrow(() -> new IllegalArgumentException(ErrorMessageUtil.NOT_FOUND_MEMBER));
 
         if (authority != Authority.ADMIN) return ResponseEntity.ok(new IsAdminResponse(false));

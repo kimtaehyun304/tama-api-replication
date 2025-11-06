@@ -3,9 +3,9 @@ package org.example.tamaapi.controller;
 import jakarta.persistence.EntityManager;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.example.tamaapi.cache.BestItem;
-import org.example.tamaapi.cache.MyCacheType;
-import org.example.tamaapi.aspect.PreAuthentication;
+import org.example.tamaapi.common.cache.BestItem;
+import org.example.tamaapi.common.cache.MyCacheType;
+import org.example.tamaapi.common.aspect.PreAuthentication;
 import org.example.tamaapi.domain.item.*;
 import org.example.tamaapi.dto.UploadFile;
 import org.example.tamaapi.dto.requestDto.CategoryItemFilterRequest;
@@ -20,11 +20,13 @@ import org.example.tamaapi.dto.responseDto.ShoppingBagDto;
 import org.example.tamaapi.dto.responseDto.item.RelatedColorItemDto;
 import org.example.tamaapi.dto.responseDto.item.SavedColorItemIdResponse;
 import org.example.tamaapi.dto.validator.SortValidator;
-import org.example.tamaapi.exception.MyBadRequestException;
-import org.example.tamaapi.repository.item.*;
-import org.example.tamaapi.repository.item.query.*;
-import org.example.tamaapi.repository.item.query.dto.CategoryBestItemQueryResponse;
-import org.example.tamaapi.repository.item.query.dto.CategoryItemQueryDto;
+import org.example.tamaapi.common.exception.MyBadRequestException;
+import org.example.tamaapi.query.item.*;
+import org.example.tamaapi.query.item.dynamicQuery.ItemDynamicQueryRepository;
+import org.example.tamaapi.query.item.dynamicQuery.dto.CategoryBestItemQueryResponse;
+import org.example.tamaapi.query.item.dynamicQuery.dto.CategoryItemQueryDto;
+import org.example.tamaapi.command.item.*;
+
 import org.example.tamaapi.service.CacheService;
 import org.example.tamaapi.service.ItemService;
 import org.springframework.http.HttpStatus;
@@ -34,7 +36,7 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 import java.util.*;
 import java.util.stream.Collectors;
-import static org.example.tamaapi.util.ErrorMessageUtil.*;
+import static org.example.tamaapi.common.util.ErrorMessageUtil.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 
@@ -42,33 +44,33 @@ import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 @RequiredArgsConstructor
 public class ItemApiController {
 
-    private final ColorItemRepository colorItemRepository;
-    private final ColorItemImageRepository colorItemImageRepository;
-    private final ColorItemSizeStockRepository colorItemSizeStockRepository;
-    private final CategoryRepository categoryRepository;
-    private final ItemQueryRepository itemQueryRepository;
-    private final ColorRepository colorRepository;
-    private final SortValidator sortValidator;
+    private final ColorItemQueryRepository colorItemQueryRepository;
+    private final ColorItemSizeStockQueryRepository colorItemSizeStockQueryRepository;
+    private final ColorItemImageQueryRepository colorItemImageQueryRepository;
+    private final CategoryQueryRepository categoryQueryRepository;
+    private final ColorQueryRepository colorQueryRepository;
+
+    private final ItemDynamicQueryRepository itemDynamicQueryRepository;
     private final ItemService itemService;
+
+    private final SortValidator sortValidator;
     private final CacheService cacheService;
-    private final ItemRepository itemRepository;
-    private final EntityManager em;
 
     @GetMapping("/api/colorItems/{colorItemId}")
     //select 필드 너무 많아서 dto 조회 개선 필요
     public ColorItemDetailDto colorItemDetail(@PathVariable Long colorItemId) {
-        ColorItem colorItem = colorItemRepository.findWithItemAndStocksByColorItemId(colorItemId)
+        ColorItem colorItem = colorItemQueryRepository.findWithItemAndStocksByColorItemId(colorItemId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 colorItem을 찾을 수 없습니다"));
 
         //해당 상품 모든 이미지
-        List<ColorItemImage> colorItemImage = colorItemImageRepository.findAllByColorItemId(colorItemId);
+        List<ColorItemImage> colorItemImage = colorItemImageQueryRepository.findAllByColorItemId(colorItemId);
 
         //연관 상품 썸네일들
-        List<ColorItem> relatedColorItems = colorItemRepository.findRelatedColorItemByItemId(colorItem.getItem().getId());
+        List<ColorItem> relatedColorItems = colorItemQueryRepository.findRelatedColorItemByItemId(colorItem.getItem().getId());
         List<Long> colorItemIds = relatedColorItems.stream().map(ColorItem::getId).toList();
 
         //이거 영속성 컨텍스트 충돌 날거 같은데 (충돌 안남)
-        List<ColorItemImage> relatedColorItemDefaultImages = colorItemImageRepository.findAllByColorItemIdInAndSequence(colorItemIds, 1);
+        List<ColorItemImage> relatedColorItemDefaultImages = colorItemImageQueryRepository.findAllByColorItemIdInAndSequence(colorItemIds, 1);
         Map<Long, UploadFile> uploadFileMap = relatedColorItemDefaultImages.stream().collect(Collectors.toMap(ci -> ci.getColorItem().getId(), ColorItemImage::getUploadFile));
         List<RelatedColorItemDto> relatedColorItemDtos = relatedColorItems.stream().map(rci -> new RelatedColorItemDto(rci, uploadFileMap.get(rci.getId()))).toList();
 
@@ -77,10 +79,10 @@ public class ItemApiController {
 
     @GetMapping("/api/colorItemSizeStock")
     public List<ShoppingBagDto> shoppingBag(@RequestParam(value = "id") List<Long> itemStockIds) {
-        List<ColorItemSizeStock> colorItemSizeStocks = colorItemSizeStockRepository.findAllWithColorItemAndItemByIdIn(itemStockIds);
+        List<ColorItemSizeStock> colorItemSizeStocks = colorItemSizeStockQueryRepository.findAllWithColorItemAndItemByIdIn(itemStockIds);
         List<Long> colorItemIds = colorItemSizeStocks.stream().map(ciss -> ciss.getColorItem().getId()).toList();
 
-        List<ColorItemImage> colorItemImages = colorItemImageRepository.findAllByColorItemIdInAndSequence(colorItemIds, 1);
+        List<ColorItemImage> colorItemImages = colorItemImageQueryRepository.findAllByColorItemIdInAndSequence(colorItemIds, 1);
         Map<Long, UploadFile> uploadFileMap = colorItemImages.stream().collect(Collectors.toMap(cii -> cii.getColorItem().getId(), ColorItemImage::getUploadFile));
 
         List<ShoppingBagDto> shoppingBagDtos = colorItemSizeStocks.stream()
@@ -105,7 +107,7 @@ public class ItemApiController {
         List<Long> categoryIds = new ArrayList<>();
         if(categoryId != null) {
             //상위 카테고리인지 확인
-            Category category = categoryRepository.findWithChildrenById(categoryId)
+            Category category = categoryQueryRepository.findWithChildrenById(categoryId)
                     .orElseThrow(() -> new IllegalArgumentException("해당 category를 찾을 수 없습니다"));
             categoryIds.add(categoryId);
             //상위 카테고리일경우 하위를 함께 보여줌
@@ -115,14 +117,14 @@ public class ItemApiController {
         //상위 색상일경우 하위를 함께 보여줌
         List<Long> colorIds = new ArrayList<>();
         if(!CollectionUtils.isEmpty(itemFilter.getColorIds())) {
-            List<Color> colors = colorRepository.findWithChildrenByIdIn(itemFilter.getColorIds());
+            List<Color> colors = colorQueryRepository.findWithChildrenByIdIn(itemFilter.getColorIds());
             for (Color color : colors) {
                 colorIds.add(color.getId());
                 colorIds.addAll(color.getChildren().stream().map(Color::getId).toList());
             }
         }
 
-        return itemQueryRepository.findCategoryItemsWithPagingAndSort(sort, customPageRequest, categoryIds, itemFilter.getItemName(), itemFilter.getMinPrice()
+        return itemDynamicQueryRepository.findCategoryItemsWithPagingAndSort(sort, customPageRequest, categoryIds, itemFilter.getItemName(), itemFilter.getMinPrice()
                 , itemFilter.getMaxPrice(), colorIds, itemFilter.getGenders(), itemFilter.getIsContainSoldOut());
     }
 
@@ -132,7 +134,7 @@ public class ItemApiController {
 
         List<Long> categoryIds = new ArrayList<>();
         if (categoryId != null) {
-            Category category = categoryRepository.findWithChildrenById(categoryId)
+            Category category = categoryQueryRepository.findWithChildrenById(categoryId)
                     .orElseThrow(() -> new IllegalArgumentException(NOT_FOUND_CATEGORY));
             categoryIds.add(categoryId);
             //상위 카테고리의 자식 포함
@@ -150,19 +152,12 @@ public class ItemApiController {
         return (List<CategoryBestItemQueryResponse>) cacheService.get(MyCacheType.BEST_ITEM, bestItem.name());
     }
 
-    //S3 도입 전에 쓰던 거
-    /*
-    @GetMapping("/api/images/items/{storedFileName}")
-    public UrlResource itemImage(@PathVariable String storedFileName) throws MalformedURLException {
-        return new UrlResource("file:"+fileStore.getFullPath(storedFileName));
-    }
-    */
 
     @PostMapping(value = "/api/items/new", consumes = {APPLICATION_JSON_VALUE, MULTIPART_FORM_DATA_VALUE})
     @PreAuthentication
     @Secured("ROLE_ADMIN")
     public ResponseEntity<SavedColorItemIdResponse> saveItems(@Valid @RequestBody SaveItemRequest req) {
-        Category category = categoryRepository.findById(req.getCategoryId()).orElseThrow(() -> new IllegalArgumentException(NOT_FOUND_CATEGORY));
+        Category category = categoryQueryRepository.findById(req.getCategoryId()).orElseThrow(() -> new IllegalArgumentException(NOT_FOUND_CATEGORY));
 
         Item item = new Item(req.getOriginalPrice(), req.getNowPrice(), req.getGender(),
                 req.getYearSeason(), req.getName(), req.getDescription()
@@ -171,13 +166,13 @@ public class ItemApiController {
 
         //영속성 컨텍스트 등록
         List<Long> colorIds = req.getColorItems().stream().map(SaveColorItemRequest::getColorId).toList();
-        List<Color> colors = colorRepository.findAllById(colorIds);
+        List<Color> colors = colorQueryRepository.findAllById(colorIds);
 
         //colorItems 엔티티 생성
         //영속성 컨텍스트에서 꺼냄
         List<ColorItem> colorItems = req.getColorItems().stream().map(ci ->
                 new ColorItem(item
-                , colorRepository.findById(ci.getColorId())
+                , colorQueryRepository.findById(ci.getColorId())
                         .orElseThrow(() -> new IllegalArgumentException(NOT_FOUND_COLOR))
                 )
         ).toList();

@@ -2,7 +2,7 @@ package org.example.tamaapi.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.tamaapi.cache.MyCacheType;
+import org.example.tamaapi.common.cache.MyCacheType;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.caffeine.CaffeineCache;

@@ -19,7 +19,9 @@ import org.springframework.batch.item.database.builder.JpaPagingItemReaderBuilde
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.interceptor.DefaultTransactionAttribute;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -78,6 +80,11 @@ public class AutoOrderCompleteJobConfig {
                 .<Long, Long>chunk(chunkSize, transactionManager)
                 .reader(orderIdReader)
                 .writer(orderUpdateWriter)
+                .transactionAttribute(
+                        new DefaultTransactionAttribute(TransactionDefinition.PROPAGATION_REQUIRED) {{
+                            setReadOnly(true);
+                        }}
+                )
                 .faultTolerant()
                 .retry(Exception.class)
                 .retryLimit(3)

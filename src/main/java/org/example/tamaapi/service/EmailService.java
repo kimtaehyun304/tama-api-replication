@@ -18,7 +18,6 @@ import org.springframework.stereotype.Service;
 public class EmailService {
 
     private final JavaMailSender javaMailSender;
-    private ThreadPoolTaskExecutor taskExecutor;
 
     public void sendSignedUpEmail(String toMailAddr) {
         String subject = "[TAMA] 회원가입 완료 안내";

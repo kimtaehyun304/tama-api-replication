@@ -6,11 +6,13 @@ import org.example.tamaapi.domain.item.ColorItem;
 import org.example.tamaapi.domain.item.ColorItemImage;
 import org.example.tamaapi.domain.item.ColorItemSizeStock;
 import org.example.tamaapi.domain.item.Item;
-import org.example.tamaapi.exception.NotEnoughStockException;
-import org.example.tamaapi.repository.JdbcTemplateRepository;
-import org.example.tamaapi.repository.item.ColorItemRepository;
-import org.example.tamaapi.repository.item.ColorItemSizeStockRepository;
-import org.example.tamaapi.repository.item.ItemRepository;
+import org.example.tamaapi.common.exception.NotEnoughStockException;
+import org.example.tamaapi.command.JdbcTemplateRepository;
+import org.example.tamaapi.command.item.ColorItemRepository;
+import org.example.tamaapi.command.item.ColorItemSizeStockRepository;
+import org.example.tamaapi.command.item.ItemRepository;
+import org.example.tamaapi.query.item.ColorItemQueryRepository;
+import org.example.tamaapi.query.item.ItemQueryRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static org.example.tamaapi.util.ErrorMessageUtil.*;
+import static org.example.tamaapi.common.util.ErrorMessageUtil.*;
 
 @Service
 @Transactional
@@ -26,10 +28,11 @@ import static org.example.tamaapi.util.ErrorMessageUtil.*;
 public class ItemService {
 
     private final ItemRepository itemRepository;
+
+    private final ColorItemQueryRepository colorItemQueryRepository;
+
     private final JdbcTemplateRepository jdbcTemplateRepository;
-    private final ColorItemRepository colorItemRepository;
     private final EntityManager em;
-    private final ColorItemSizeStockRepository colorItemSizeStockRepository;
 
     public List<Long> saveItem(Item item, List<ColorItem> colorItems, List<ColorItemSizeStock> colorItemSizeStocks) {
         itemRepository.save(item);
@@ -42,7 +45,7 @@ public class ItemService {
         List<Long> colorIds = colorItems.stream().map(c -> c.getColor().getId()).toList();
 
         //방금 bulk insert한 colorItem PK 조회
-        List<ColorItem> foundColorItems = colorItemRepository.findAllByItemIdAndColorIdIn(item.getId(), colorIds);
+        List<ColorItem> foundColorItems = colorItemQueryRepository.findAllByItemIdAndColorIdIn(item.getId(), colorIds);
 
         //KEY:ColorId, VALUE:colorItemId
         Map<Long, Long> map = foundColorItems.stream()
@@ -82,10 +85,5 @@ public class ItemService {
             throw new NotEnoughStockException();
     }
 
-    public void changeStock(Long colorItemSizeStockId, int quantity){
-        ColorItemSizeStock colorItemSizeStock = colorItemSizeStockRepository.findById(colorItemSizeStockId)
-                .orElseThrow(()->new IllegalArgumentException(NOT_FOUND_ITEM));
-        colorItemSizeStock.changeStock(quantity);
-    }
 
 }

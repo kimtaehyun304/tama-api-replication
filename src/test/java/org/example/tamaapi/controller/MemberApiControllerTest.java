@@ -1,7 +1,7 @@
 package org.example.tamaapi.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.example.tamaapi.cache.MyCacheType;
+import org.example.tamaapi.common.cache.MyCacheType;
 import org.example.tamaapi.domain.user.Authority;
 import org.example.tamaapi.domain.user.Member;
 import org.example.tamaapi.domain.user.MemberAddress;
@@ -11,12 +11,12 @@ import org.example.tamaapi.dto.requestDto.member.SaveMemberAddressRequest;
 import org.example.tamaapi.dto.requestDto.member.SignUpMemberRequest;
 import org.example.tamaapi.dto.requestDto.member.UpdateMemberDefaultAddressRequest;
 import org.example.tamaapi.dto.requestDto.member.UpdateMemberInformationRequest;
-import org.example.tamaapi.auth.jwt.TokenProvider;
-import org.example.tamaapi.repository.MemberAddressRepository;
-import org.example.tamaapi.repository.MemberRepository;
+import org.example.tamaapi.common.auth.jwt.TokenProvider;
+import org.example.tamaapi.command.MemberAddressRepository;
+import org.example.tamaapi.command.MemberRepository;
 import org.example.tamaapi.service.CacheService;
 import org.example.tamaapi.service.MemberService;
-import org.example.tamaapi.util.ErrorMessageUtil;
+import org.example.tamaapi.common.util.ErrorMessageUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

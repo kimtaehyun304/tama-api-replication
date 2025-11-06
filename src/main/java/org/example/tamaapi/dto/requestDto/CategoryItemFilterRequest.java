@@ -1,19 +1,11 @@
 package org.example.tamaapi.dto.requestDto;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import jakarta.validation.constraints.AssertFalse;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.*;
 import org.example.tamaapi.domain.Gender;
-import org.example.tamaapi.exception.MyBadRequestException;
-import org.springframework.util.StringUtils;
 
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @Getter
 @AllArgsConstructor

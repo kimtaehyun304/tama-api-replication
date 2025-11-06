@@ -1,15 +1,13 @@
 package org.example.tamaapi.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.tamaapi.domain.order.PortOnePaymentStatus;
 import org.example.tamaapi.dto.PortOneOrder;
-import org.example.tamaapi.dto.requestDto.order.OrderRequest;
-import org.example.tamaapi.exception.OrderFailException;
-import org.example.tamaapi.exception.WillCancelPaymentException;
+import org.example.tamaapi.common.exception.OrderFailException;
+import org.example.tamaapi.common.exception.WillCancelPaymentException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatusCode;

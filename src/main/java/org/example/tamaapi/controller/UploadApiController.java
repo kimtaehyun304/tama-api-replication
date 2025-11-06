@@ -2,12 +2,13 @@ package org.example.tamaapi.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.example.tamaapi.aspect.PreAuthentication;
+import org.example.tamaapi.common.aspect.PreAuthentication;
 import org.example.tamaapi.domain.item.*;
 import org.example.tamaapi.dto.UploadFile;
 import org.example.tamaapi.dto.requestDto.item.save.*;
 import org.example.tamaapi.dto.responseDto.SimpleResponse;
-import org.example.tamaapi.repository.item.*;
+import org.example.tamaapi.command.item.*;
+import org.example.tamaapi.query.item.ColorItemQueryRepository;
 import org.example.tamaapi.service.ItemService;
 import org.example.tamaapi.service.S3Service;
 import org.springframework.http.HttpStatus;
@@ -25,7 +26,7 @@ import java.util.stream.IntStream;
 @RequiredArgsConstructor
 public class UploadApiController {
 
-    private final ColorItemRepository colorItemRepository;
+    private final ColorItemQueryRepository colorItemQueryRepository;
     private final ItemService itemService;
     private final S3Service s3Service;
 
@@ -37,7 +38,7 @@ public class UploadApiController {
         wrapperRequest.getRequests().forEach(req -> s3Service.areFilesImage(req.getFiles()));
 
         List<Long> colorItemIds = wrapperRequest.getRequests().stream().map(SaveColorItemImageRequest::getColorItemId).toList();
-        List<ColorItem> colorItems = colorItemRepository.findAllById(colorItemIds);
+        List<ColorItem> colorItems = colorItemQueryRepository.findAllById(colorItemIds);
 
         //colorItemImages 엔티티 생성
         Map<Long, List<UploadFile>> uploadFileMap = wrapperRequest.getRequests().stream()

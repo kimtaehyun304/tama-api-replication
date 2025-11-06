@@ -3,7 +3,7 @@ package org.example.tamaapi.domain.item;
 import jakarta.persistence.*;
 import lombok.*;
 import org.example.tamaapi.domain.order.OrderItem;
-import org.example.tamaapi.exception.MyBadRequestException;
+import org.example.tamaapi.common.exception.MyBadRequestException;
 import org.hibernate.annotations.DynamicUpdate;
 
 import java.util.ArrayList;

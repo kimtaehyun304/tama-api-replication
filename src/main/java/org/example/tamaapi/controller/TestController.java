@@ -3,10 +3,10 @@ package org.example.tamaapi.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.tamaapi.domain.item.Item;
-import org.example.tamaapi.repository.item.ColorItemImageRepository;
-import org.example.tamaapi.repository.item.ItemRepository;
+import org.example.tamaapi.command.item.ColorItemImageRepository;
+import org.example.tamaapi.command.item.ItemRepository;
 import org.example.tamaapi.service.PortOneService;
-import org.example.tamaapi.util.ErrorMessageUtil;
+import org.example.tamaapi.common.util.ErrorMessageUtil;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -60,14 +60,15 @@ public class TestController {
         SaveOrderRequest saveOrderRequest = portOneService.extractCustomData((String) res.get("customData"));
         return  saveOrderRequest;
     }
+
+    @GetMapping("/errors")
+    public ResponseEntity<String> errorTest() {
+        log.error("error");
+        return ResponseEntity.badRequest().body("error");
+    }
+
+
     */
 
-    @GetMapping(value = "/test")
-    public String find() {
-        String name = "여 코듀로이 와이드 팬츠0";
-        Item item = itemRepository.findWithColorItemByName(name)
-                .orElseThrow(() -> new IllegalArgumentException(ErrorMessageUtil.NOT_FOUND_ITEM));
-        return "OK";
-    }
 
 }

@@ -4,8 +4,8 @@ package org.example.tamaapi;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.tamaapi.cache.BestItem;
-import org.example.tamaapi.cache.MyCacheType;
+import org.example.tamaapi.common.cache.BestItem;
+import org.example.tamaapi.common.cache.MyCacheType;
 import org.example.tamaapi.domain.*;
 import org.example.tamaapi.domain.order.OrderStatus;
 import org.example.tamaapi.domain.user.coupon.Coupon;
@@ -21,16 +21,17 @@ import org.example.tamaapi.dto.requestDto.CustomPageRequest;
 
 import org.example.tamaapi.dto.requestDto.order.OrderItemRequest;
 import org.example.tamaapi.dto.requestDto.order.OrderRequest;
-import org.example.tamaapi.exception.OrderFailException;
-import org.example.tamaapi.repository.*;
-import org.example.tamaapi.repository.item.*;
-import org.example.tamaapi.repository.item.query.ItemQueryRepository;
-import org.example.tamaapi.repository.item.query.dto.CategoryBestItemQueryResponse;
-import org.example.tamaapi.repository.order.DeliveryRepository;
-import org.example.tamaapi.repository.order.OrderItemRepository;
-import org.example.tamaapi.repository.order.OrderRepository;
+import org.example.tamaapi.common.exception.OrderFailException;
+import org.example.tamaapi.query.item.dynamicQuery.ItemDynamicQueryRepository;
+import org.example.tamaapi.query.item.dynamicQuery.dto.CategoryBestItemQueryResponse;
+import org.example.tamaapi.command.*;
+import org.example.tamaapi.command.item.*;
+
+import org.example.tamaapi.command.order.DeliveryRepository;
+import org.example.tamaapi.command.order.OrderItemRepository;
+import org.example.tamaapi.command.order.OrderRepository;
 import org.example.tamaapi.service.*;
-import org.example.tamaapi.util.ErrorMessageUtil;
+import org.example.tamaapi.common.util.ErrorMessageUtil;
 import org.springframework.core.env.Environment;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -42,7 +43,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static org.example.tamaapi.util.ErrorMessageUtil.NOT_FOUND_COUPON;
+import static org.example.tamaapi.common.util.ErrorMessageUtil.NOT_FOUND_COUPON;
 
 @Component
 @RequiredArgsConstructor
@@ -86,11 +87,12 @@ public class Init {
         private final ColorItemRepository colorItemRepository;
         private final MemberAddressRepository memberAddressRepository;
         private final DeliveryRepository deliveryRepository;
-        private final ItemQueryRepository itemQueryRepository;
         private final CacheService cacheService;
         private final CouponRepository couponRepository;
         private final MemberCouponRepository memberCouponRepository;
         private final OrderService orderService;
+        private final ItemDynamicQueryRepository itemDynamicQueryRepository;
+
         /*
         private void crawlItem(){
 
@@ -899,7 +901,7 @@ public class Init {
                 }
 
                 // 캐시 저장
-                List<CategoryBestItemQueryResponse> bestItems = itemQueryRepository.findCategoryBestItemWithPaging(categoryIds, customPageRequest);
+                List<CategoryBestItemQueryResponse> bestItems = itemDynamicQueryRepository.findCategoryBestItemWithPaging(categoryIds, customPageRequest);
                 cacheService.save(MyCacheType.BEST_ITEM, bestItem.name(), bestItems);
             }
         }

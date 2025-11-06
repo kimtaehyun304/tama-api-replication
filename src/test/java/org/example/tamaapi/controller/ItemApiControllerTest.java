@@ -11,12 +11,15 @@ import org.example.tamaapi.domain.user.Member;
 import org.example.tamaapi.dto.requestDto.item.save.SaveColorItemRequest;
 import org.example.tamaapi.dto.requestDto.item.save.SaveItemRequest;
 import org.example.tamaapi.dto.requestDto.item.save.SaveSizeStockRequest;
-import org.example.tamaapi.auth.jwt.TokenProvider;
-import org.example.tamaapi.repository.MemberRepository;
-import org.example.tamaapi.repository.item.ColorItemRepository;
-import org.example.tamaapi.repository.item.ColorItemSizeStockRepository;
-import org.example.tamaapi.repository.item.ItemRepository;
-import org.example.tamaapi.util.ErrorMessageUtil;
+import org.example.tamaapi.common.auth.jwt.TokenProvider;
+import org.example.tamaapi.command.MemberRepository;
+import org.example.tamaapi.command.item.ColorItemRepository;
+import org.example.tamaapi.command.item.ColorItemSizeStockRepository;
+import org.example.tamaapi.command.item.ItemRepository;
+import org.example.tamaapi.common.util.ErrorMessageUtil;
+import org.example.tamaapi.query.item.ColorItemQueryRepository;
+import org.example.tamaapi.query.item.ColorItemSizeStockQueryRepository;
+import org.example.tamaapi.query.item.ItemQueryRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -53,13 +56,13 @@ class ItemApiControllerTest {
     private TokenProvider tokenProvider;
 
     @Autowired
-    private ItemRepository itemRepository;
+    private ItemQueryRepository itemQueryRepository;
 
     @Autowired
-    private ColorItemRepository colorItemRepository;
+    private ColorItemQueryRepository colorItemQueryRepository;
 
     @Autowired
-    private ColorItemSizeStockRepository colorItemSizeStockRepository;
+    private ColorItemSizeStockQueryRepository colorItemSizeStockQueryRepository;
 
     @Autowired
     private MemberRepository memberRepository;
@@ -117,7 +120,7 @@ class ItemApiControllerTest {
         em.clear();
 
         //then
-        Item item = itemRepository.findWithColorItemByName(name)
+        Item item = itemQueryRepository.findWithColorItemByName(name)
                 .orElseThrow(() -> new IllegalArgumentException(ErrorMessageUtil.NOT_FOUND_ITEM));
         assertThat(item.getName()).isEqualTo(name);
         assertThat(item.getCategory().getId()).isEqualTo(categoryId);
@@ -134,9 +137,9 @@ class ItemApiControllerTest {
 
         List<SaveColorItemRequest> savedColorItemRequests = new ArrayList<>();
 
-        List<ColorItem> colorItems = colorItemRepository.findAllByItemId(item.getId());
+        List<ColorItem> colorItems = colorItemQueryRepository.findAllByItemId(item.getId());
         List<Long> colorItemIds = colorItems.stream().map(ColorItem::getId).toList();
-        List<ColorItemSizeStock> colorItemSizeStocks = colorItemSizeStockRepository.findAllByColorItemIdIn(colorItemIds);
+        List<ColorItemSizeStock> colorItemSizeStocks = colorItemSizeStockQueryRepository.findAllByColorItemIdIn(colorItemIds);
         //key:colorId
         Map<Long, List<ColorItemSizeStock>> map = colorItemSizeStocks
                 .stream().collect(Collectors.groupingBy(c -> c.getColorItem().getColor().getId()));

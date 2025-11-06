@@ -2,7 +2,8 @@ package org.example.tamaapi.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.example.tamaapi.auth.CustomPrincipal;
+import org.example.tamaapi.common.auth.CustomPrincipal;
+import org.example.tamaapi.common.cache.MyCacheType;
 import org.example.tamaapi.domain.user.coupon.MemberCoupon;
 import org.example.tamaapi.domain.user.Authority;
 import org.example.tamaapi.domain.user.Member;
@@ -19,12 +20,15 @@ import org.example.tamaapi.dto.responseDto.SimpleResponse;
 import org.example.tamaapi.dto.responseDto.member.MemberAddressesResponse;
 import org.example.tamaapi.dto.responseDto.member.MemberInformationResponse;
 
-import org.example.tamaapi.auth.jwt.TokenProvider;
+import org.example.tamaapi.common.auth.jwt.TokenProvider;
 import org.example.tamaapi.event.SignedUpEvent;
-import org.example.tamaapi.repository.MemberAddressRepository;
+import org.example.tamaapi.command.MemberAddressRepository;
 
-import org.example.tamaapi.repository.MemberCouponRepository;
-import org.example.tamaapi.repository.MemberRepository;
+import org.example.tamaapi.command.MemberCouponRepository;
+import org.example.tamaapi.command.MemberRepository;
+import org.example.tamaapi.query.MemberAddressQueryRepository;
+import org.example.tamaapi.query.MemberCouponQueryRepository;
+import org.example.tamaapi.query.MemberQueryRepository;
 import org.example.tamaapi.service.CacheService;
 import org.example.tamaapi.service.MemberService;
 import org.springframework.context.ApplicationEventPublisher;
@@ -32,55 +36,38 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-import static org.example.tamaapi.util.ErrorMessageUtil.NOT_FOUND_MEMBER;
+import static org.example.tamaapi.common.util.ErrorMessageUtil.NOT_FOUND_MEMBER;
 
 @RestController
 @RequiredArgsConstructor
 public class MemberApiController {
 
-    private final MemberRepository memberRepository;
-    private final CacheService cacheService;
+    private final MemberQueryRepository memberQueryRepository;
+    private final MemberService memberService;
+
+    private final MemberAddressQueryRepository memberAddressQueryRepository;
+    private final MemberCouponQueryRepository memberCouponQueryRepository;
+
+    private final ApplicationEventPublisher eventPublisher;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final TokenProvider tokenProvider;
-    private final MemberService memberService;
-    private final MemberAddressRepository memberAddressRepository;
-    private final MemberCouponRepository memberCouponRepository;
-    private final ApplicationEventPublisher eventPublisher;
 
     @PostMapping("/api/member/new")
     public ResponseEntity<SimpleResponse> signUp(@Valid @RequestBody SignUpMemberRequest request) {
-        memberService.validateIsExists(request.getEmail(), request.getPhone());
-
-        /*
-        String authString = (String) cacheService.get(MyCacheType.SIGN_UP_AUTH_STRING, request.getEmail());
-
-        if (!StringUtils.hasText(authString))
-            throw new IllegalArgumentException("유효하지 않는 인증문자");
-
-        if(!request.getAuthString().equals(authString))
-            throw new IllegalArgumentException("인증문자 불일치");
-
-        cacheService.evict(MyCacheType.SIGN_UP_AUTH_STRING, request.getEmail());
-
-         */
-        String password = bCryptPasswordEncoder.encode(request.getPassword());
-        Member member = Member.builder()
-                .email(request.getEmail()).phone(request.getPhone())
-                .nickname(request.getNickname()).password(password)
-                .provider(Provider.LOCAL).authority(Authority.MEMBER)
-                .build();
-        memberRepository.save(member);
-        eventPublisher.publishEvent(new SignedUpEvent(member.getId()));
+        Long memberId = memberService.saveMember(request);
+        eventPublisher.publishEvent(new SignedUpEvent(memberId));
         return ResponseEntity.status(HttpStatus.CREATED).body(new SimpleResponse("회원가입 성공"));
     }
 
     @PostMapping("/api/member/login")
     public ResponseEntity<AccessTokenResponse> login(@Valid @RequestBody LoginRequest request) {
-        Member member = memberRepository.findByEmail(request.getEmail()).orElseThrow(() -> new IllegalArgumentException(NOT_FOUND_MEMBER));
+        Member member = memberQueryRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new IllegalArgumentException(NOT_FOUND_MEMBER));
 
         if (!bCryptPasswordEncoder.matches(request.getPassword(), member.getPassword()))
             throw new IllegalArgumentException("로그인 실패");
@@ -95,9 +82,10 @@ public class MemberApiController {
         if (principal == null)
             throw new IllegalArgumentException("액세스 토큰이 비었습니다.");
 
-        Member member = memberRepository.findById(principal.getMemberId()).orElseThrow(() -> new IllegalArgumentException(NOT_FOUND_MEMBER));
-        MemberInformationResponse memberInformationResponse = new MemberInformationResponse(member);
-        return ResponseEntity.status(HttpStatus.OK).body(memberInformationResponse);
+        Member member = memberQueryRepository.findById(principal.getMemberId())
+                .orElseThrow(() -> new IllegalArgumentException(NOT_FOUND_MEMBER));
+
+        return ResponseEntity.status(HttpStatus.OK).body(new MemberInformationResponse(member));
     }
 
     //개인정보
@@ -116,7 +104,7 @@ public class MemberApiController {
         if (principal == null)
             throw new IllegalArgumentException("액세스 토큰이 비었습니다.");
 
-        List<MemberAddress> memberAddresses = memberAddressRepository.findAllByMemberId(principal.getMemberId());
+        List<MemberAddress> memberAddresses = memberAddressQueryRepository.findAllByMemberId(principal.getMemberId());
         return memberAddresses.stream().map(MemberAddressesResponse::new).toList();
     }
 
@@ -145,7 +133,7 @@ public class MemberApiController {
         if (principal == null)
             throw new IllegalArgumentException("액세스 토큰이 비었습니다.");
 
-        List<MemberCoupon> memberCoupons = memberCouponRepository.findNotExpiredAndUnusedCouponsByMemberId(principal.getMemberId());
+        List<MemberCoupon> memberCoupons = memberCouponQueryRepository.findNotExpiredAndUnusedCouponsByMemberId(principal.getMemberId());
         return memberCoupons.stream().map(MemberCouponResponse::new).toList();
     }
 

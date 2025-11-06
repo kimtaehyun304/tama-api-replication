@@ -1,7 +1,7 @@
 package org.example.tamaapi.service;
 
 import lombok.RequiredArgsConstructor;
-import org.example.tamaapi.config.S3Config;
+import org.example.tamaapi.common.config.S3Config;
 import org.example.tamaapi.dto.UploadFile;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;

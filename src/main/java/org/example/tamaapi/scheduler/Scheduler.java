@@ -2,33 +2,30 @@ package org.example.tamaapi.scheduler;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.tamaapi.cache.BestItem;
-import org.example.tamaapi.cache.MyCacheType;
+import org.example.tamaapi.common.cache.BestItem;
+import org.example.tamaapi.common.cache.MyCacheType;
 import org.example.tamaapi.domain.item.Category;
-import org.example.tamaapi.domain.order.Order;
-import org.example.tamaapi.domain.order.OrderStatus;
 import org.example.tamaapi.domain.user.Authority;
 import org.example.tamaapi.domain.user.Member;
 import org.example.tamaapi.domain.user.coupon.Coupon;
-import org.example.tamaapi.domain.user.coupon.CouponType;
 import org.example.tamaapi.domain.user.coupon.MemberCoupon;
 import org.example.tamaapi.dto.requestDto.CustomPageRequest;
-import org.example.tamaapi.repository.CouponRepository;
-import org.example.tamaapi.repository.MemberCouponRepository;
-import org.example.tamaapi.repository.MemberRepository;
-import org.example.tamaapi.repository.item.CategoryRepository;
-import org.example.tamaapi.repository.item.query.ItemQueryRepository;
-import org.example.tamaapi.repository.item.query.dto.CategoryBestItemQueryResponse;
-import org.example.tamaapi.repository.order.OrderRepository;
+import org.example.tamaapi.query.MemberCouponQueryRepository;
+import org.example.tamaapi.query.MemberQueryRepository;
+import org.example.tamaapi.query.item.CategoryQueryRepository;
+import org.example.tamaapi.query.item.dynamicQuery.ItemDynamicQueryRepository;
+import org.example.tamaapi.query.item.dynamicQuery.dto.CategoryBestItemQueryResponse;
+import org.example.tamaapi.command.CouponRepository;
+import org.example.tamaapi.command.MemberCouponRepository;
+import org.example.tamaapi.command.MemberRepository;
+import org.example.tamaapi.command.item.CategoryRepository;
+
 import org.example.tamaapi.service.CacheService;
-import org.example.tamaapi.service.OrderService;
-import org.example.tamaapi.util.ErrorMessageUtil;
+import org.example.tamaapi.common.util.ErrorMessageUtil;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
 import org.springframework.batch.core.launch.JobLauncher;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -41,14 +38,17 @@ import java.util.List;
 @Slf4j
 public class Scheduler {
 
-    private final ItemQueryRepository itemQueryRepository;
-    private final CategoryRepository categoryRepository;
+    private final ItemDynamicQueryRepository itemDynamicQueryRepository;
+    private final CategoryQueryRepository categoryQueryRepository;
+
+    private final MemberCouponQueryRepository memberCouponQueryRepository;
+    private final MemberQueryRepository memberQueryRepository;
+    private final CouponRepository couponRepository;
+    private final MemberCouponRepository memberCouponRepository;
+
     private final CacheService cacheService;
     private final JobLauncher jobLauncher;
     private final Job completeOrderJob;
-    private final MemberCouponRepository memberCouponRepository;
-    private final MemberRepository memberRepository;
-    private final CouponRepository couponRepository;
 
     @Scheduled(cron = "0 0 0 * * *", zone = "Asia/Seoul")
     private void saveBestItemCache(){
@@ -59,14 +59,14 @@ public class Scheduler {
             List<Long> categoryIds = new ArrayList<>();
 
             if(bestItem.getCategoryId() != null){
-                Category category = categoryRepository.findWithChildrenById(bestItem.getCategoryId())
+                Category category = categoryQueryRepository.findWithChildrenById(bestItem.getCategoryId())
                         .orElseThrow(() -> new IllegalArgumentException(ErrorMessageUtil.NOT_FOUND_CATEGORY));
                 categoryIds.add(bestItem.getCategoryId());
                 categoryIds.addAll(category.getChildren().stream().map(Category::getId).toList());
             }
 
             // 캐시 저장
-            List<CategoryBestItemQueryResponse> bestItems = itemQueryRepository.findCategoryBestItemWithPaging(categoryIds, customPageRequest);
+            List<CategoryBestItemQueryResponse> bestItems = itemDynamicQueryRepository.findCategoryBestItemWithPaging(categoryIds, customPageRequest);
             cacheService.save(MyCacheType.BEST_ITEM, bestItem.name(), bestItems);
         }
     }
@@ -88,9 +88,10 @@ public class Scheduler {
 
     @Scheduled(cron = "0 0 0 * * *", zone = "Asia/Seoul")
     //체험용 계정에 쿠폰 발급 (다 썼을 경우)
+    //체험용 계정은 면접관이 기능 체험할때 쓰라고 만든 계정
     public void giveCoupon() {
-        Member experienceAccount = memberRepository.findAllByAuthority(Authority.MEMBER).get(1);
-        boolean isAllCouponsUsed = !memberCouponRepository.existsByMemberIdAndIsUsedIsFalse(experienceAccount.getId());
+        Member experienceAccount = memberQueryRepository.findAllByAuthority(Authority.MEMBER).get(1);
+        boolean isAllCouponsUsed = !memberCouponQueryRepository.existsByMemberIdAndIsUsedIsFalse(experienceAccount.getId());
 
         if(isAllCouponsUsed){
             List<Coupon> coupons = couponRepository.findAllById(List.of(1L, 2L, 3L, 4L, 5L, 6L));
