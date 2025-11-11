@@ -1,8 +1,9 @@
-package org.example.tamaapi.service;
+package org.example.tamaapi.command.order;
 
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.tamaapi.command.item.ItemService;
 import org.example.tamaapi.domain.user.coupon.CouponType;
 import org.example.tamaapi.domain.user.coupon.MemberCoupon;
 import org.example.tamaapi.domain.user.Authority;
@@ -22,12 +23,11 @@ import org.example.tamaapi.common.exception.WillCancelPaymentException;
 import org.example.tamaapi.command.JdbcTemplateRepository;
 import org.example.tamaapi.command.MemberCouponRepository;
 import org.example.tamaapi.command.MemberRepository;
-import org.example.tamaapi.command.item.ColorItemSizeStockRepository;
-import org.example.tamaapi.command.order.OrderRepository;
 import org.example.tamaapi.query.MemberCouponQueryRepository;
 import org.example.tamaapi.query.MemberQueryRepository;
 import org.example.tamaapi.query.item.ColorItemSizeStockQueryRepository;
 import org.example.tamaapi.query.order.OrderQueryRepository;
+import org.example.tamaapi.command.PortOneService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

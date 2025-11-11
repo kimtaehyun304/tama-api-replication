@@ -2,11 +2,9 @@ package org.example.tamaapi.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.tamaapi.domain.item.Item;
 import org.example.tamaapi.command.item.ColorItemImageRepository;
 import org.example.tamaapi.command.item.ItemRepository;
-import org.example.tamaapi.service.PortOneService;
-import org.example.tamaapi.common.util.ErrorMessageUtil;
+import org.example.tamaapi.command.PortOneService;
 import org.springframework.web.bind.annotation.*;
 
 @RestController

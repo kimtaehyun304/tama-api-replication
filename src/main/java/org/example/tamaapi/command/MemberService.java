@@ -1,4 +1,4 @@
-package org.example.tamaapi.service;
+package org.example.tamaapi.command;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -11,10 +11,6 @@ import org.example.tamaapi.domain.user.coupon.Coupon;
 import org.example.tamaapi.domain.user.coupon.CouponType;
 import org.example.tamaapi.domain.user.coupon.MemberCoupon;
 import org.example.tamaapi.common.exception.MyInternalServerException;
-import org.example.tamaapi.command.CouponRepository;
-import org.example.tamaapi.command.MemberAddressRepository;
-import org.example.tamaapi.command.MemberCouponRepository;
-import org.example.tamaapi.command.MemberRepository;
 import org.example.tamaapi.common.util.ErrorMessageUtil;
 import org.example.tamaapi.dto.requestDto.member.SignUpMemberRequest;
 import org.example.tamaapi.query.MemberAddressQueryRepository;

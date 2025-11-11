@@ -18,16 +18,15 @@ import org.example.tamaapi.dto.responseDto.member.MemberOrderSetUpResponse;
 
 import org.example.tamaapi.common.exception.MyBadRequestException;
 
-import org.example.tamaapi.query.MemberCouponQueryRepository;
 import org.example.tamaapi.query.MemberQueryRepository;
 import org.example.tamaapi.query.order.OrderQueryRepository;
 import org.example.tamaapi.query.order.dynamicQuery.OrderDynamicQueryRepository;
 import org.example.tamaapi.query.order.dynamicQuery.dto.AdminOrderResponse;
 import org.example.tamaapi.query.order.dynamicQuery.dto.GuestOrderResponse;
 import org.example.tamaapi.query.order.dynamicQuery.dto.MemberOrderResponse;
-import org.example.tamaapi.service.EmailService;
-import org.example.tamaapi.service.OrderService;
-import org.example.tamaapi.service.PortOneService;
+import org.example.tamaapi.command.EmailService;
+import org.example.tamaapi.command.order.OrderService;
+import org.example.tamaapi.command.PortOneService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

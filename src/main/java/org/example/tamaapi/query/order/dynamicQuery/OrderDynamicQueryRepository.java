@@ -13,7 +13,7 @@ import org.example.tamaapi.dto.requestDto.CustomPageRequest;
 import org.example.tamaapi.dto.responseDto.CustomPage;
 import org.example.tamaapi.query.MemberCouponQueryRepository;
 import org.example.tamaapi.query.order.dynamicQuery.dto.*;
-import org.example.tamaapi.service.OrderService;
+import org.example.tamaapi.command.order.OrderService;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 

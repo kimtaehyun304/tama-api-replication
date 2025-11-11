@@ -10,7 +10,7 @@ import org.example.tamaapi.common.auth.jwt.TokenProvider;
 import org.example.tamaapi.command.MemberRepository;
 import org.example.tamaapi.command.item.ReviewRepository;
 import org.example.tamaapi.command.order.OrderItemRepository;
-import org.example.tamaapi.service.OrderService;
+import org.example.tamaapi.command.order.OrderService;
 import org.example.tamaapi.common.util.ErrorMessageUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

@@ -1,4 +1,4 @@
-package org.example.tamaapi.service;
+package org.example.tamaapi.command;
 
 import lombok.RequiredArgsConstructor;
 import org.example.tamaapi.domain.item.Review;

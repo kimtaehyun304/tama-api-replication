@@ -3,12 +3,9 @@ package org.example.tamaapi.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.tamaapi.common.auth.CustomPrincipal;
-import org.example.tamaapi.common.cache.MyCacheType;
 import org.example.tamaapi.domain.user.coupon.MemberCoupon;
-import org.example.tamaapi.domain.user.Authority;
 import org.example.tamaapi.domain.user.Member;
 import org.example.tamaapi.domain.user.MemberAddress;
-import org.example.tamaapi.domain.user.Provider;
 import org.example.tamaapi.dto.requestDto.LoginRequest;
 import org.example.tamaapi.dto.requestDto.member.SaveMemberAddressRequest;
 import org.example.tamaapi.dto.requestDto.member.SignUpMemberRequest;
@@ -22,21 +19,16 @@ import org.example.tamaapi.dto.responseDto.member.MemberInformationResponse;
 
 import org.example.tamaapi.common.auth.jwt.TokenProvider;
 import org.example.tamaapi.event.SignedUpEvent;
-import org.example.tamaapi.command.MemberAddressRepository;
 
-import org.example.tamaapi.command.MemberCouponRepository;
-import org.example.tamaapi.command.MemberRepository;
 import org.example.tamaapi.query.MemberAddressQueryRepository;
 import org.example.tamaapi.query.MemberCouponQueryRepository;
 import org.example.tamaapi.query.MemberQueryRepository;
-import org.example.tamaapi.service.CacheService;
-import org.example.tamaapi.service.MemberService;
+import org.example.tamaapi.command.MemberService;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;

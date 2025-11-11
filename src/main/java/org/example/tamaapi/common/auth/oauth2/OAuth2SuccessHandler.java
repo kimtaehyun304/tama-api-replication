@@ -8,7 +8,7 @@ import org.example.tamaapi.common.cache.MyCacheType;
 import org.example.tamaapi.common.auth.jwt.TokenProvider;
 import org.example.tamaapi.domain.user.Member;
 import org.example.tamaapi.command.MemberRepository;
-import org.example.tamaapi.service.CacheService;
+import org.example.tamaapi.command.CacheService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;

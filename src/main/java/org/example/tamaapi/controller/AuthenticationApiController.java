@@ -11,10 +11,9 @@ import org.example.tamaapi.dto.responseDto.AccessTokenResponse;
 import org.example.tamaapi.dto.responseDto.IsAdminResponse;
 import org.example.tamaapi.dto.responseDto.SimpleResponse;
 
-import org.example.tamaapi.command.MemberRepository;
 import org.example.tamaapi.query.MemberQueryRepository;
-import org.example.tamaapi.service.CacheService;
-import org.example.tamaapi.service.EmailService;
+import org.example.tamaapi.command.CacheService;
+import org.example.tamaapi.command.EmailService;
 import org.example.tamaapi.common.util.ErrorMessageUtil;
 import org.example.tamaapi.common.util.RandomStringGenerator;
 import org.springframework.http.HttpStatus;

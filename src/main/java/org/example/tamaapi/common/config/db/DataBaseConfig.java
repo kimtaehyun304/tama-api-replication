@@ -51,8 +51,6 @@ public class DataBaseConfig {
             );
         }
 
-        //System.out.println("dataBaseProperty.getMaster() = " + dataBaseProperty.getMaster());
-        //System.out.println("dataBaseProperty.getSlaves() = " + dataBaseProperty.getSlaves());
         return sources;
     }
 

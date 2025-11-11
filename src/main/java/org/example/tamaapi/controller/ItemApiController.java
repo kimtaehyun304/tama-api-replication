@@ -1,6 +1,5 @@
 package org.example.tamaapi.controller;
 
-import jakarta.persistence.EntityManager;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.tamaapi.common.cache.BestItem;
@@ -25,10 +24,9 @@ import org.example.tamaapi.query.item.*;
 import org.example.tamaapi.query.item.dynamicQuery.ItemDynamicQueryRepository;
 import org.example.tamaapi.query.item.dynamicQuery.dto.CategoryBestItemQueryResponse;
 import org.example.tamaapi.query.item.dynamicQuery.dto.CategoryItemQueryDto;
-import org.example.tamaapi.command.item.*;
 
-import org.example.tamaapi.service.CacheService;
-import org.example.tamaapi.service.ItemService;
+import org.example.tamaapi.command.CacheService;
+import org.example.tamaapi.command.item.ItemService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.annotation.Secured;

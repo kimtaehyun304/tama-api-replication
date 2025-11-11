@@ -17,10 +17,8 @@ import org.example.tamaapi.query.item.dynamicQuery.ItemDynamicQueryRepository;
 import org.example.tamaapi.query.item.dynamicQuery.dto.CategoryBestItemQueryResponse;
 import org.example.tamaapi.command.CouponRepository;
 import org.example.tamaapi.command.MemberCouponRepository;
-import org.example.tamaapi.command.MemberRepository;
-import org.example.tamaapi.command.item.CategoryRepository;
 
-import org.example.tamaapi.service.CacheService;
+import org.example.tamaapi.command.CacheService;
 import org.example.tamaapi.common.util.ErrorMessageUtil;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobParameters;

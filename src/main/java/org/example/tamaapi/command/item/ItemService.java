@@ -1,4 +1,4 @@
-package org.example.tamaapi.service;
+package org.example.tamaapi.command.item;
 
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
