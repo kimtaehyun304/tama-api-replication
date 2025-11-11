@@ -22,8 +22,6 @@ import static org.example.tamaapi.common.config.db.RoundRobinDataSource.DATASOUR
 
 @Configuration
 @EnableAutoConfiguration(exclude = DataSourceAutoConfiguration.class)
-//@EnableTransactionManagement
-//@EnableJpaRepositories(basePackages = {"org.example.tamaapi"})
 public class DataBaseConfig {
 
     @Autowired
@@ -39,6 +37,7 @@ public class DataBaseConfig {
     public List<DataSource> slaveDataSources() {
         List<DataSource> sources = new ArrayList<>();
 
+        //yml 변동에 따라 자동으로 추가하기 위함
         for (DataBaseProperty.DatabaseDetail slave : dataBaseProperty.getSlaves()) {
             sources.add(
                     DataSourceBuilder.create()
