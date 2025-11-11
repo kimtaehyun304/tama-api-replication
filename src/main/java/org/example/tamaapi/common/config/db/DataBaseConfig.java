@@ -56,7 +56,8 @@ public class DataBaseConfig {
     @Bean
     public DataSource routingDataSource(@Qualifier("masterDataSource") DataSource master,
                                         @Qualifier("slaveDataSources") List<DataSource> slaves) {
-        RoundRobinDataSource roundRobinDataSource = new RoundRobinDataSource(dataBaseProperty.getSlaves().size());
+        //RoundRobinDataSource dataSource = new RoundRobinDataSource(dataBaseProperty.getSlaves().size());
+        RoutingDataSource dataSource = new RoutingDataSource();
         HashMap<Object, Object> sources = new HashMap<>();
         sources.put(DATASOURCE_KEY_MASTER, master);
 
@@ -67,9 +68,9 @@ public class DataBaseConfig {
             ++index;
         }
 
-        roundRobinDataSource.setTargetDataSources(sources);
-        roundRobinDataSource.setDefaultTargetDataSource(master);
-        return roundRobinDataSource;
+        dataSource.setTargetDataSources(sources);
+        dataSource.setDefaultTargetDataSource(master);
+        return dataSource;
     }
 
     @Primary
