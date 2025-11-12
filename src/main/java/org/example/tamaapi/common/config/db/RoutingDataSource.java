@@ -15,7 +15,7 @@ public class RoutingDataSource extends AbstractRoutingDataSource {
         Object dataSource = DATASOURCE_KEY_MASTER;
 
         if (TransactionSynchronizationManager.isCurrentTransactionReadOnly())
-            dataSource = "slave";
+            dataSource = "slave0";
 
         log.info("Selected DB: {}", dataSource);
         return dataSource;
