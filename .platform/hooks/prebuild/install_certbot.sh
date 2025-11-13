@@ -23,25 +23,9 @@ if [ ! -d /etc/letsencrypt/live ]; then
 
 # Nginx reload 시도
 if ! sudo systemctl reload nginx; then
-    echo "[WARN] Nginx reload failed. Freeing port 80..."
-
-    # 80포트 점유 프로세스 종료
-    PIDS=$(sudo lsof -t -i:80)
-    if [ -n "$PIDS" ]; then
-        for PID in $PIDS; do
-            sudo kill -9 "$PID"
-        done
-    fi
-
-    sleep 2
-
-    # systemctl start 시도
-    echo "[INFO] Starting Nginx via systemctl..."
-    if sudo systemctl start nginx; then
-        echo "[SUCCESS] Nginx started successfully."
-    else
-        echo "[ERROR] Failed to start Nginx. Please check manually."
-    fi
+    echo "[WARN] Nginx reload failed. killing nginx process..."
+    sudo pkill -f nginx
+    sudo systemctl start nginx
 else
     echo "[SUCCESS] Nginx reloaded successfully."
 fi
