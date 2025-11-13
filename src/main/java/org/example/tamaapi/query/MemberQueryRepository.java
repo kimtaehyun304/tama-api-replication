@@ -18,7 +18,6 @@ public interface MemberQueryRepository extends JpaRepository<Member, Long> {
 
     boolean existsByPhone(String phone);
 
-
     List<Member> findAllByAuthority(Authority authority);
 
     @Query("select m from Member m join fetch m.addresses where m.id = :memberId")
