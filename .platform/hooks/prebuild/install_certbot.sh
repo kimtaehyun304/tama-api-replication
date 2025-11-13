@@ -2,7 +2,7 @@
 # Beanstalk EC2 재생성 시 certbot + Let's Encrypt 인증서 자동 설치/갱신
 # Nginx reload 실패 시 80포트 점유 프로세스 종료 후 systemctl start
 
-set -e
+#set -e
 
 # certbot 설치 여부 확인
 if [ ! -d /etc/letsencrypt/live ]; then
