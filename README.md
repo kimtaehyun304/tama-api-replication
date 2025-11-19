@@ -1,4 +1,4 @@
-<h1>기존 쇼핑몰에 mysql 복제 + 수평 확장 적용</h1>
+<h1>기존 쇼핑몰에 mysql 복제 + cqrs + 수평 확장 적용</h1>
 
 기존 쇼핑몰: https://github.com/kimtaehyun304/tama-api  
 스택: 스프링 부트3, data jpa, mysql 8.0.37
