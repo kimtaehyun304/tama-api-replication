@@ -15,7 +15,7 @@
 버전1 요약
 </a>
  <ul>
-  <li>repository 패키지를 command, query 패키지로 분리</li>
+  <li>repository 패키지를 command, query로 분리</li>
   <li>yml에 적은 db 정보와 매핑되는 클래스 생성</li>
   <li>트랜잭션 readOnly에 따라 동적으로 db 결정 (LazyConnectionDataSourceProxy)</li>
   <li>slave 라운드 로빈을 위해 동시성을 보장하는 AtomicInteger 사용 (애플리케이션 레벨 라우팅)</li>
