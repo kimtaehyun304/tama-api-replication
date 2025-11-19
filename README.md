@@ -3,9 +3,9 @@
 기존 쇼핑몰: https://github.com/kimtaehyun304/tama-api  
 스택: 스프링 부트3, data jpa, mysql 8.0.37
   
-버전1-로컬 개발 단계: cqrs로 패키지 분리, slave 로드 밸런싱, 도커로 mysql 복제 환경 구축 ex) master(1) slave(2)   
-버전2-수동 수평 확장: aws rds (mysql), route53  
-버전3-자동 수평 확장: aws aurora (mysql), rds proxy 
+버전1_로컬 개발 단계: cqrs로 패키지 분리, slave 로드 밸런싱, 도커로 mysql 복제 환경 구축 ex) master(1) slave(2)   
+버전2_수동 수평 확장: aws rds (mysql), route53  
+버전3_자동 수평 확장: aws aurora (mysql), rds proxy 
 
 ### 버전 업그레이드 과정
 
