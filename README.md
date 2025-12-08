@@ -12,7 +12,7 @@
 자세한 내용은 벨로그에 포스팅했습니다  
 
 <a href="https://velog.io/@hyungman304/%EB%AA%A8%EB%86%80%EB%A6%AC%EC%8A%A4-%ED%99%98%EA%B2%BD%EC%97%90%EC%84%9C-db-%EC%88%98%ED%8F%89-%ED%99%95%EC%9E%A5-1-cqrs-%EB%B0%8F-%EB%B3%B5%EC%A0%9C-%EC%A0%81%EC%9A%A9">
-버전1 요약
+버전1
 </a>
  <ul>
   <li>repository 패키지를 command, query로 분리</li>
@@ -22,7 +22,7 @@
 </ul>
 
 <a href="https://velog.io/@hyungman304/%EB%AA%A8%EB%86%80%EB%A6%AC%EC%8A%A4-%ED%99%98%EA%B2%BD%EC%97%90%EC%84%9C-db-%EC%88%98%ED%8F%89-%ED%99%95%EC%9E%A5-2-aws-%EC%88%98%EB%8F%99-scale-out">
-버전2 요약
+버전2
 </a>
  <ul>
   <li>로컬 db를 aws rds로 교체하고 yml에 반영</li>
@@ -31,7 +31,7 @@
 </ul>
 
 <a href="https://velog.io/@hyungman304/%EB%AA%A8%EB%86%80%EB%A6%AC%EC%8A%A4-%ED%99%98%EA%B2%BD%EC%97%90%EC%84%9C-db-%EC%88%98%ED%8F%89-%ED%99%95%EC%9E%A5-3-aws-%EC%9E%90%EB%8F%99-scale-out">
-버전3 요약
+버전3
 </a>
  <ul>
   <li>aws rds는 db 자동 수평 확장을 제공하지 않아서 aurora severless2로 변경</li>
