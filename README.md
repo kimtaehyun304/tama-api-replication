@@ -23,28 +23,27 @@
 버전1
 </a>
  <ul>
-  <li>repository 패키지를 command, query로 분리</li>
-  <li>yml에 적은 db 정보와 매핑되는 클래스 생성</li>
-  <li>트랜잭션 readOnly에 따라 동적으로 db 결정 (LazyConnectionDataSourceProxy)</li>
-  <li>slave 라운드 로빈을 위해 동시성을 보장하는 AtomicInteger 사용 (애플리케이션 레벨 라우팅)</li>
+  <li>repository 패키지 → command, query로 분리</li>
+  <li>트랜잭션 readOnly → read db 선택 (LazyConnectionDataSourceProxy)</li>
+  <li>read db 라운드 로빈을 위해 AtomicInteger 사용 (애플리케이션 레벨 라우팅)</li>
 </ul>
 
 <a href="https://velog.io/@hyungman304/%EB%AA%A8%EB%86%80%EB%A6%AC%EC%8A%A4-%ED%99%98%EA%B2%BD%EC%97%90%EC%84%9C-db-%EC%88%98%ED%8F%89-%ED%99%95%EC%9E%A5-2-aws-%EC%88%98%EB%8F%99-scale-out">
 버전2
 </a>
  <ul>
-  <li>로컬 db를 aws rds로 교체하고 yml에 반영</li>
-  <li>db 스케일 아웃하고 배포를 안 하기위해 route53에서 db 라우팅으로 변경</li>
-  <li>AOP로 분산이 잘 되는지 테스트</li>
+  <li>로컬 db → aws rds 교체</li>
+  <li>애플리케이션 레벨 라우팅 → route53 db 라우팅 변경/li>
+  <li>yml에서 db 주소를 프록시 서버로 해두면, 스케일 아웃하고 재배포 안해도 됨/li>
+  <li>read db 분산이 잘 되는지 테스트 (select @@hostname)</li>
 </ul>
 
 <a href="https://velog.io/@hyungman304/%EB%AA%A8%EB%86%80%EB%A6%AC%EC%8A%A4-%ED%99%98%EA%B2%BD%EC%97%90%EC%84%9C-db-%EC%88%98%ED%8F%89-%ED%99%95%EC%9E%A5-3-aws-%EC%9E%90%EB%8F%99-scale-out">
 버전3
 </a>
  <ul>
-  <li>aws rds는 db 자동 수평 확장을 제공하지 않아서 aurora severless2로 변경</li>
-  <li>aurora 트래픽 분산 문제를 보완하기 위해, rds proxy 추가</li>
-  <li>보안 그룹 생성 ex) ec2↔rdsProxy, rdsProxy↔rds</li>
+  <li>aws rds는 db 자동 수평 확장 미제공 → aurora severless2로 변경</li>
+  <li>aurora만 쓰면 여러 문제 발생 → rds proxy 추가</li>
   <li>aurora 오토 스케일링 정책 적용</li>
+  <li>리소스간 보안 그룹 생성 ex) ec2 ↔ rdsProxy, rdsProxy ↔ rds</li>
 </ul>
-
