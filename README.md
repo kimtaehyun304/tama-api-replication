@@ -34,7 +34,7 @@
  <ul>
   <li>로컬 db → aws rds 교체</li>
   <li>애플리케이션 레벨 라우팅 → route53 db 라우팅 변경</li>
-  <li>yml에서 db 주소를 프록시 서버로 해두면, 스케일 아웃하고 재배포 안해도 됨</li>
+  <li>why? yml에서 db 주소를 프록시 서버로 해두면, 스케일 아웃하고 재배포 안해도 됨</li>
   <li>read db 분산이 잘 되는지 테스트 (select @@hostname)</li>
 </ul>
 
