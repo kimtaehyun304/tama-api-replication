@@ -24,7 +24,7 @@
 </a>
  <ul>
   <li>repository 패키지 → command, query로 분리</li>
-  <li>트랜잭션 readOnly → read db 선택 (LazyConnectionDataSourceProxy)</li>
+  <li>트랜잭션 readOnly면 read db 선택 (LazyConnectionDataSourceProxy)</li>
   <li>read db 라운드 로빈을 위해 AtomicInteger 사용 (애플리케이션 레벨 라우팅)</li>
 </ul>
 
